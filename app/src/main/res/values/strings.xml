@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Bank Application</string>
+    <string name="text_view_welcome">Welcome to your Bank manager</string>
+    <string name="edit_text_pin">PIN</string>
+    <string name="edit_text_confirm_pin">Confirm PIN</string>
+    <string name="button_connect">Connect</string>
+    <string name="button_save">Save changes</string>
+    <string name="credits">Developed by Loan P.</string>
+    <string name="use_biometric">Use biometric authentication</string>
+    <string name="text_view_change_pin">Welcome for your first login ! Please modify your secret PIN</string>
+    <string name="button_refresh">Refresh</string>
+    <string name="button_disconnect">Disconnect</string>
+</resources>
