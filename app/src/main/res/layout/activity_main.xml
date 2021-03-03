@@ -42,7 +42,7 @@
         android:layout_height="67dp"
         android:ems="10"
         android:hint="@string/edit_text_pin"
-        android:inputType="textPersonName"
+        android:inputType="numberPassword"
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

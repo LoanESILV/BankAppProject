@@ -29,7 +29,7 @@ public class ChangePINActivity extends AppCompatActivity {
         buttonSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                 if(editTextChangePIN.getText().toString().equals(editTextConfirmPIN.getText().toString())){
+                 if(editTextChangePIN.getText().toString().equals(editTextConfirmPIN.getText().toString()) && editTextChangePIN.getText().toString().length() == 4){
                      byte[] md5Input = editTextChangePIN.getText().toString().getBytes();
                      BigInteger md5Data = null;
 
@@ -51,7 +51,7 @@ public class ChangePINActivity extends AppCompatActivity {
                      finish();
                  }
                  else{
-                     Toast.makeText(getApplicationContext(), "PIN and its confirmation are different", Toast.LENGTH_SHORT).show();
+                     Toast.makeText(getApplicationContext(), "PIN doesn't contain 4 numbers or it and its confirmation are different", Toast.LENGTH_SHORT).show();
                  }
             }
         });

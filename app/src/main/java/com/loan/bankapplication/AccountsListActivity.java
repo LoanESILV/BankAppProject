@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,9 +18,16 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,7 +45,11 @@ public class AccountsListActivity extends AppCompatActivity {
     Button buttonRefresh;
     Button buttonDisconnect;
 
-    DatabaseHandler databaseHandler;
+    static{
+        System.loadLibrary("native-lib");
+    }
+
+    public native String stringFromJNI();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +60,6 @@ public class AccountsListActivity extends AppCompatActivity {
         buttonDisconnect = findViewById(R.id.buttonDisconnect);
 
         listView = findViewById(R.id.listView);
-
-        databaseHandler = new DatabaseHandler(this);
 
         refreshAccounts();
 
@@ -114,11 +124,19 @@ public class AccountsListActivity extends AppCompatActivity {
     }
 
     public void refreshAccounts(){
-        Retrofit retrofit = new Retrofit.Builder().baseUrl("https://60102f166c21e10017050128.mockapi.io/").addConverterFactory(GsonConverterFactory.create()).build();
+        String apiURL = stringFromJNI();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(apiURL)
+                .client(getSafeOkHttpClient())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
         JsonPlaceHolderApi jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
 
         Call<List<Account>> call = jsonPlaceHolderApi.getAccounts();
+
+        DatabaseHandler databaseHandler = new DatabaseHandler(this);
 
         call.enqueue(new Callback<List<Account>>() {
             @Override
@@ -132,6 +150,8 @@ public class AccountsListActivity extends AppCompatActivity {
                     Toast.makeText(AccountsListActivity.this, response.code(), Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                databaseHandler.cleanData();
 
                 List<Account> accounts = response.body();
 
@@ -174,5 +194,48 @@ public class AccountsListActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    public static OkHttpClient getSafeOkHttpClient() {
+
+        try {
+            // Create a trust manager that does not validate certificate chains
+            final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(
+                        java.security.cert.X509Certificate[] chain,
+                        String authType) throws CertificateException {
+                }
+
+                @Override
+                public void checkServerTrusted(
+                        java.security.cert.X509Certificate[] chain,
+                        String authType) throws CertificateException {
+                }
+
+                @Override
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return new java.security.cert.X509Certificate[0];
+                }
+            } };
+
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts,
+                    new java.security.SecureRandom());
+            // Create an ssl socket factory with our all-trusting manager
+            final SSLSocketFactory sslSocketFactory = sslContext
+                    .getSocketFactory();
+
+            OkHttpClient okHttpClient = new OkHttpClient();
+            okHttpClient = okHttpClient.newBuilder()
+                    .sslSocketFactory(sslSocketFactory)
+                    .hostnameVerifier(org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER).build();
+
+            return okHttpClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

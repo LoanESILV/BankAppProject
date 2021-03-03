@@ -15,9 +15,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 1;
 
-    private static final String DATABASE_NAME="accounts.db";
+    private static final String DATABASE_NAME="AccountsDB";
 
-    private static final String TABLE_NAME = "accounts";
+    private static final String TABLE_NAME = "AccountsTable";
 
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_ACCOUNT_NAME = "accountName";
@@ -25,21 +25,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String COLUMN_IBAN = "iban";
     private static final String COLUMN_CURRENCY = "currency";
 
-    SQLiteDatabase database;
-
     public DatabaseHandler(Context context){
         super(context,DATABASE_NAME,null,DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db){
-        db.execSQL("CREATE TABLE " + TABLE_NAME + "( " + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +  COLUMN_ACCOUNT_NAME + " VARCHAR(256), " + COLUMN_AMOUNT + " VARCHAR(256), " + COLUMN_CURRENCY + " VARCHAR(256), " + COLUMN_IBAN + " VARCHAR(256))");
+        db.execSQL("CREATE TABLE " + TABLE_NAME + " (" + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +  COLUMN_ACCOUNT_NAME + " VARCHAR(256), " + COLUMN_AMOUNT + " VARCHAR(256), " + COLUMN_CURRENCY + " VARCHAR(256), " + COLUMN_IBAN + " VARCHAR(256))");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-
+        db.execSQL("DROP TABLE " + TABLE_NAME);
         this.onCreate(db);
     }
 
@@ -59,9 +56,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public void cleanData(){
         SQLiteDatabase db = this.getWritableDatabase();
 
-        database.execSQL("DROP TABLE TABLE_NAME;");
+        db.execSQL("DROP TABLE " + TABLE_NAME);
 
-        database.execSQL("CREATE TABLE " + TABLE_NAME + " ( " + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +  COLUMN_ACCOUNT_NAME + " VARCHAR(256), " + COLUMN_AMOUNT + " VARCHAR(256), " + COLUMN_CURRENCY + " VARCHAR(256), " + COLUMN_IBAN + " VARCHAR(256))");
+        db.execSQL("CREATE TABLE " + TABLE_NAME + "( " + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +  COLUMN_ACCOUNT_NAME + " VARCHAR(256), " + COLUMN_AMOUNT + " VARCHAR(256), " + COLUMN_CURRENCY + " VARCHAR(256), " + COLUMN_IBAN + " VARCHAR(256))");
     }
 
     public List<Account> readData(){
@@ -69,7 +66,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         String selectQuery = "SELECT " + COLUMN_ACCOUNT_NAME + ", " + COLUMN_AMOUNT + ", " + COLUMN_CURRENCY + ", " + COLUMN_IBAN + " FROM " + TABLE_NAME;
 
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if (cursor.moveToFirst()) {
@@ -82,6 +79,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 accountsList.add(account);
             } while (cursor.moveToNext());
         }
+
+        cursor.close();
+        db.close();
 
         return accountsList;
     }
